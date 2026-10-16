@@ -2,10 +2,6 @@
 
 Loja conceito de moda fitness feminina, com vitrine responsiva, coleção de 12 peças, montador de looks, sacola e checkout de demonstração.
 
-![Vitrine da V’Lana](docs/vitrine.jpg)
-
-Prévia visual da versão inicial da vitrine.
-
 **Estado atual: demonstração.** Produtos, preços e composição são ilustrativos. Há imagens criadas com IA. No modo padrão, o checkout não transmite os dados do formulário nem cria pedidos ou cobranças reais.
 
 ## Executar localmente
