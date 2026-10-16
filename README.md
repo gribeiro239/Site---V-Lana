@@ -1,12 +1,45 @@
 # V’Lana — Activewear
 
-Loja conceito de moda fitness feminina, com vitrine responsiva, coleção de 12 peças, montador de looks, sacola e checkout de demonstração.
+A V’Lana é um projeto de loja virtual de moda fitness feminina. A proposta foi criar uma experiência que vai além de apresentar as peças: a pessoa pode conhecer a coleção, montar suas próprias combinações e adicionar o look completo à sacola, escolhendo o tamanho de cada item.
 
-**Estado atual: demonstração.** Produtos, preços e composição são ilustrativos. Há imagens criadas com IA. No modo padrão, o checkout não transmite os dados do formulário nem cria pedidos ou cobranças reais.
+O projeto começou pela vitrine e foi ampliado com novas peças, imagens de campanha e um fluxo de checkout, além da estrutura de pedidos, estoque e pagamentos no backend.
 
-## Executar localmente
+## O que foi desenvolvido
 
-Requisito: **Node.js 24 ou superior**, com npm. O projeto usa APIs nativas do Node, incluindo `node:sqlite` nos testes, e não tem dependências npm externas.
+A interface ganhou uma identidade visual em tons de oliva, com tipografia de destaque e uma apresentação voltada para as imagens da coleção. O layout se adapta a celulares e computadores, e a navegação reúne a coleção, o montador de looks e a apresentação da marca.
+
+Na vitrine, foram implementados:
+
+- Catálogo com 12 peças e detalhes de cada produto, incluindo preço, cor, composição ilustrativa e seleção de tamanho.
+- Montador de looks com escolha de top, base e camada adicional, além de combinações sugeridas.
+- Sacola com alteração de quantidades, remoção de itens e cálculo do subtotal.
+- Persistência da sacola no navegador com `localStorage`.
+- Checkout demonstrativo com opções de retirada e entrega local em Campinas.
+- Imagens de campanha criadas com IA e conversão das duas imagens maiores para WebP, reduzindo seu peso em cerca de 96%.
+
+No backend, foi preparada uma API para validar os preços do carrinho, registrar pedidos e reservar estoque por peça e tamanho. Também foram desenvolvidos o painel de gestão, a confirmação do frete e a integração com o Checkout Pro do Mercado Pago, incluindo a validação das notificações de pagamento.
+
+**A loja está em demonstração.** Produtos, preços e composições são ilustrativos. No modo padrão, o checkout não envia os dados preenchidos nem gera pedidos ou cobranças reais. A estrutura de comércio depende da configuração do ambiente e dos testes com a conta da loja para entrar em operação.
+
+## Tecnologias utilizadas
+
+| Tecnologia | Como foi utilizada |
+| --- | --- |
+| **HTML5** | Estrutura das páginas, formulários e janelas de detalhes e sacola |
+| **CSS3** | Identidade visual, layouts com Grid e Flexbox, responsividade e estados de interação |
+| **JavaScript** | Catálogo interativo, montagem de looks, sacola e comunicação com a API |
+| **Node.js 24+** | Scripts de build, servidor de prévia local e execução dos testes |
+| **Worker com Fetch API** | Backend de pedidos, estoque e pagamentos |
+| **D1 / SQLite** | Armazenamento de variantes, pedidos e itens, com migrações SQL |
+| **Mercado Pago Checkout Pro** | Integração preparada para criar sessões de pagamento e conferir notificações por webhook |
+| **Sites** | Ambiente de hospedagem previsto para o Worker, banco D1 e autenticação da gestão |
+| **GitHub Actions** | Execução automática do build e dos testes a cada push ou pull request |
+
+O frontend foi feito com HTML, CSS e JavaScript puro. Os scripts e testes usam recursos nativos do Node.js, sem dependências npm externas.
+
+## Como executar
+
+Com **Node.js 24 ou superior** e npm instalados:
 
 ```sh
 git clone https://github.com/gribeiro239/Site---V-Lana.git
@@ -14,55 +47,47 @@ cd Site---V-Lana
 npm run dev
 ```
 
-Abra http://127.0.0.1:4173. A prévia local funciona em modo demo; não simula banco, autenticação da proprietária ou pagamentos reais. Ela não carrega automaticamente arquivos `.env`.
+Depois, abra [http://127.0.0.1:4173](http://127.0.0.1:4173).
+
+A prévia local permite explorar a vitrine e o checkout de demonstração. Ela não simula o banco, a autenticação da proprietária ou pagamentos reais, e não carrega arquivos `.env` automaticamente.
+
+## Testes e build
 
 ```sh
-npm test       # Gera o Worker e executa os testes
-npm run build # Gera somente o Worker em dist/
+npm test
 ```
 
-O GitHub Actions executa build e testes em pushes e pull requests. Os testes verificam catálogo, estoque, pedidos, autorização, notificações de pagamento e o Worker gerado. A API do Mercado Pago é simulada: esses testes não comprovam pagamentos reais.
+Esse comando gera o Worker e executa os 16 testes automatizados. Eles verificam a consistência do catálogo, a reserva e liberação de estoque, a validação dos pedidos, as restrições de acesso e o tratamento das notificações de pagamento. O Mercado Pago é simulado nos testes; a validação com o serviço real ainda precisa ser feita.
 
-## Funcionalidades e rotas
+Para gerar apenas os arquivos de publicação:
 
-| Rota | Finalidade |
-| --- | --- |
-| `/` | Coleção, detalhes das peças, looks e sacola |
-| `/checkout` | Demonstração de retirada ou entrega local em Campinas |
-| `/pedido` | Acompanhamento do último pedido pelo token guardado no navegador |
-| `/gestao` | Painel de pedidos e estoque, com autenticação da proprietária pelo Sites |
+```sh
+npm run build
+```
 
-O backend prepara validação de preços, reserva atômica de estoque, confirmação de frete e integração com Checkout Pro do Mercado Pago. Sua ativação depende da configuração do ambiente e da validação operacional.
+O resultado fica em `dist/`. O GitHub Actions também executa o build e os testes automaticamente, sem fazer deploy.
 
-## Estrutura
+## Organização do projeto
 
 ```text
-public/           Vitrine, telas, estilos e imagens
-server/           API de comércio para Worker
-drizzle/          Migrações SQL do banco D1
-scripts/          Build e prévia local
-tests/            Testes com SQLite em memória e provedor simulado
-.openai/          Manifesto de hospedagem do Sites
-.github/workflows/ Verificação automática
-docs/             Prévia e documentação de hospedagem
+public/             Páginas, estilos, scripts do navegador e imagens
+server/             API de pedidos, estoque e pagamentos
+drizzle/            Migrações SQL do banco
+scripts/            Build e servidor de prévia local
+tests/              Testes automatizados
+docs/               Prévia visual e documentação de hospedagem
+.openai/            Manifesto de hospedagem do Sites
+.github/workflows/  Workflow de build e testes
 ```
 
-## Hospedagem e configuração
+As principais páginas são a vitrine (`/`), o checkout (`/checkout`), o acompanhamento do último pedido feito no navegador (`/pedido`) e a gestão da loja (`/gestao`). O painel de gestão exige autenticação da proprietária pelo Sites.
 
-O destino atual é **Sites**, com Worker e banco D1 vinculado como `DB`. O build incorpora as imagens e os arquivos públicos ao Worker. Consulte [Hospedagem](docs/HOSPEDAGEM.md) e [Operação de pedidos e pagamentos](COMMERCE.md).
+## Hospedagem e próximos passos
 
-GitHub armazena e verifica o código. **GitHub Pages não executa a API, o banco ou a autenticação deste projeto.** Migrar a loja completa para outro host exige adaptar esses serviços, principalmente a autenticação administrativa.
+A aplicação foi preparada para rodar no Sites, com um Worker e banco D1. O GitHub guarda o código e executa as verificações automáticas. Para hospedar a loja completa em outro ambiente, será necessário adaptar o banco e a autenticação administrativa; o GitHub Pages sozinho não executa esses serviços.
 
-[`.env.example`](.env.example) lista os nomes das configurações, sem credenciais. Configure os valores no ambiente de hospedagem. Nunca versione tokens, segredos ou dados de clientes.
+As configurações esperadas estão em [`.env.example`](.env.example), sem credenciais. Os valores reais devem ser cadastrados no ambiente de hospedagem.
 
-## Próximas etapas para operação comercial
+Para transformar a demonstração em uma loja em operação, os próximos passos são confirmar o catálogo e o estoque reais, validar o fluxo completo com o Mercado Pago, adicionar notificações de atendimento e melhorar a recuperação de pedidos e pagamentos interrompidos. Também estão previstas a expiração de reservas, medidas contra solicitações abusivas e uma revisão de acessibilidade e das informações de atendimento, privacidade, entrega e trocas.
 
-- Confirmar catálogo real, fotos, composição, preços, tamanhos e estoque.
-- Validar pagamentos e notificações com a conta Mercado Pago da loja em ambiente de teste antes da produção.
-- Definir notificações de atendimento e recuperação do acompanhamento em outro navegador.
-- Implementar expiração de reservas e recuperação de pagamentos interrompidos com conciliação no provedor.
-- Adicionar limites contra solicitações abusivas, acompanhamento de falhas e rotina de backup/restauração.
-- Completar informações de atendimento, entrega, retirada, privacidade e trocas.
-- Fazer revisão visual em dispositivos móveis, navegação por teclado e leitores de tela.
-
-Os limites atuais estão descritos em [COMMERCE.md](COMMERCE.md). Os registros das imagens adicionais estão em [COLLECTION-IMAGES.md](COLLECTION-IMAGES.md).
+Mais detalhes estão na [documentação de hospedagem](docs/HOSPEDAGEM.md), nas [notas de operação e pagamentos](COMMERCE.md) e no [registro das imagens da coleção](COLLECTION-IMAGES.md).
