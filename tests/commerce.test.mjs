@@ -19,3 +19,28 @@ test('payment is unavailable until owner confirms; cancellation releases stock o
 test('payment preference uses server total, safe URLs and correct sandbox; cannot be cancelled after start',async()=>{const env=setup(),{data}=await place(env);await call(env,`/api/admin/orders/${data.id}`,{method:'POST',headers:admin,data:{action:'confirm',shipping:999,note:'Retirada confirmada'}});let calls=0;const mock=async(url,options)=>{calls++;const payload=JSON.parse(options.body);assert.equal(payload.items[0].unit_price,129);assert.equal(payload.items[0].quantity,2);assert.equal(payload.shipments.cost,0);assert.equal(payload.external_reference,data.id);assert(!payload.back_urls.success.includes(access.token));assert.equal(options.headers.Authorization,'Bearer test-token');return Response.json({id:'pref-1',sandbox_init_point:'https://sandbox.mercadopago.com.br/checkout/v1/test',init_point:'https://www.mercadopago.com.br/checkout/v1/live'});};const pay=await call(env,`/api/orders/${data.id}/pay`,{method:'POST',headers:auth},mock);assert.equal(pay.status,200);assert.match(pay.data.checkoutUrl,/sandbox/);const again=await call(env,`/api/orders/${data.id}/pay`,{method:'POST',headers:auth},mock);assert.equal(again.status,200);assert.equal(calls,1);assert.equal((await call(env,`/api/admin/orders/${data.id}`,{method:'POST',headers:admin,data:{action:'cancel'}})).status,409);env.DB.close();});
 test('invalid webhook signature does not query provider or mark paid',async()=>{const env=setup();const response=await call(env,'/api/webhooks/mercadopago?data.id=999',{method:'POST',data:{type:'payment',data:{id:'999'}}},()=>{assert.fail('must not query');});assert.equal(response.status,401);env.DB.close();});
 test('verified webhook validates amount/merchant/mode, handles duplicate approvals, and never trusts return parameters',async()=>{const env=setup(),{data}=await place(env);env.DB.sql.prepare("UPDATE orders SET status='payment_started',shipping_cents=0 WHERE id=?").run(data.id);let payment={id:999,external_reference:data.id,transaction_amount:258,currency_id:'BRL',collector_id:123,live_mode:false,status:'approved',date_last_updated:new Date().toISOString()};const mock=async()=>Response.json(payment);const ts=String(Date.now()),rid='test-request',signature=createHmac('sha256','test-secret').update(`id:999;request-id:${rid};ts:${ts};`).digest('hex');const options={method:'POST',headers:{'x-request-id':rid,'x-signature':`ts=${ts},v1=${signature}`},data:{type:'payment',data:{id:'999'}}};payment.transaction_amount=1;assert.equal((await call(env,'/api/webhooks/mercadopago?data.id=999',options,mock)).status,409);assert.equal(env.DB.sql.prepare('SELECT status FROM orders').get().status,'payment_started');payment.transaction_amount=258;payment.collector_id=888;assert.equal((await call(env,'/api/webhooks/mercadopago?data.id=999',options,mock)).status,409);payment.collector_id=123;assert.equal((await call(env,'/api/webhooks/mercadopago?data.id=999',options,mock)).status,200);assert.equal((await call(env,'/api/webhooks/mercadopago?data.id=999',options,mock)).status,200);assert.equal(env.DB.sql.prepare('SELECT status FROM orders').get().status,'paid');assert.equal(env.DB.sql.prepare("SELECT stock FROM variants WHERE product_id=0 AND size='M'").get().stock,1);const receipt=await call(env,`/api/orders/${data.id}?status=approved`,{headers:auth});assert.equal(receipt.data.status,'paid');env.DB.close();});
+
+test('public inventory reflects available stock without exposing orders or real stock in demo',async()=>{
+ const env=setup();
+ env.DB.sql.prepare("UPDATE variants SET stock=50 WHERE product_id=0 AND size='M'").run();
+ env.DB.sql.prepare("UPDATE variants SET stock=0 WHERE product_id=1 AND size='P'").run();
+ const live=await call(env,'/api/store');
+ assert.equal(live.status,200);
+ assert.equal(live.data.inventory.state,'ready');
+ assert.equal(live.data.inventory.variants.find(v=>v.id===0&&v.size==='M').quantity,10);
+ assert.equal(live.data.inventory.variants.find(v=>v.id===1&&v.size==='P'),undefined);
+ assert.deepEqual(Object.keys(live.data.inventory.variants[0]).sort(),['id','quantity','size']);
+ assert(!JSON.stringify(live.data).includes('test-token'));
+ const order=await place(env);assert.equal(order.status,201);
+ env.DB.sql.prepare("UPDATE variants SET stock=3 WHERE product_id=0 AND size='M'").run();
+ // A new independent order reserves two units from the same size.
+ const another=await call(env,'/api/orders',{method:'POST',headers:{'Idempotency-Key':'22222222-2222-4222-8222-222222222222',Authorization:'Bearer '+'b'.repeat(64)},data:{items:[item],customer:client}});
+ assert.equal(another.status,201);
+ const reserved=await call(env,'/api/store');
+ assert.equal(reserved.data.inventory.variants.find(v=>v.id===0&&v.size==='M').quantity,1);
+ env.STORE_MODE='demo';
+ assert.deepEqual((await call(env,'/api/store')).data.inventory,{state:'demo',variants:[]});
+ env.STORE_MODE='live';
+ assert.deepEqual((await call(env,'/api/store')).data.inventory,{state:'unavailable',variants:[]});
+ env.DB.close();
+});

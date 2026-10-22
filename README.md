@@ -11,6 +11,9 @@ A interface ganhou uma identidade visual em tons de oliva, com tipografia de des
 Na vitrine, foram implementados:
 
 - Catálogo com 12 peças e detalhes de cada produto, incluindo preço, cor, composição ilustrativa e seleção de tamanho.
+- Busca por nome, categoria ou cor, filtros combinados por categoria, cor, tamanho e faixa de preço, com ordenação por nome ou valor.
+- Guia com orientações para medir busto, cintura e quadril. A tabela de medidas por tamanho aguarda os dados reais da coleção.
+- Consulta de disponibilidade por tamanho, com bloqueio de tamanhos esgotados e revisão de quantidades na sacola quando a loja está ativa. Na demonstração, os tamanhos ficam identificados como ilustrativos.
 - Montador de looks com escolha de top, base e camada adicional, além de combinações sugeridas.
 - Sacola com alteração de quantidades, remoção de itens e cálculo do subtotal.
 - Persistência da sacola no navegador com `localStorage`.
@@ -57,7 +60,7 @@ A prévia local permite explorar a vitrine e o checkout de demonstração. Ela n
 npm test
 ```
 
-Esse comando gera o Worker e executa os 16 testes automatizados. Eles verificam a consistência do catálogo, a reserva e liberação de estoque, a validação dos pedidos, as restrições de acesso e o tratamento das notificações de pagamento. O Mercado Pago é simulado nos testes; a validação com o serviço real ainda precisa ser feita.
+Esse comando gera o Worker e executa os testes automatizados. Eles verificam a consistência do catálogo, a reserva e liberação de estoque, a validação dos pedidos, as restrições de acesso e o tratamento das notificações de pagamento. O Mercado Pago é simulado nos testes; a validação com o serviço real ainda precisa ser feita.
 
 Para gerar apenas os arquivos de publicação:
 

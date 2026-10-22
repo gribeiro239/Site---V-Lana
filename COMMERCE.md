@@ -38,6 +38,9 @@ Sem conta e credenciais, não é possível comprovar aprovação de pagamentos r
 
 ## Operação e limites desta primeira etapa
 
+- A vitrine consulta a disponibilidade por tamanho em `/api/store`, ao abrir a página, abrir a sacola ou voltar à aba. A resposta pública limita a quantidade informada a 10 por variante e não inclui pedidos nem dados pessoais. O estoque é novamente validado de forma atômica ao registrar o pedido.
+- Tamanhos sem estoque ficam bloqueados nos detalhes e no montador. Se a disponibilidade diminuir, a sacola mantém os itens para revisão e bloqueia a continuação até ajustar as quantidades. Falhas de consulta não são tratadas como estoque disponível.
+- No modo demo, os tamanhos são ilustrativos; nenhum estoque real é anunciado. O guia explica como medir o corpo, mas a tabela numérica depende das medidas reais de cada peça.
 - Frete nunca é tratado como grátis quando ainda está a combinar. A cliente precisa ver o total confirmado antes de pagar.
 - Estoque do painel significa unidades disponíveis para novos pedidos, já descontadas as reservas.
 - Solicitações sem checkout iniciado podem ser canceladas no painel, liberando a reserva uma única vez.
